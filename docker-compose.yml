@@ -40,16 +40,17 @@ services:
       - ai-net
     restart: "no"
 
-  # 3. Website: serves the frontend and proxies API requests
+  # 3. Website: built from web/Dockerfile (nginx), proxies /api/ to Ollama
   web:
-    image: nginx:alpine
+    build:
+      context: ./web
+      dockerfile: Dockerfile
     container_name: offline-ai-web
     ports:
       - "8080:80"
-    volumes:
-      - ./web:/usr/share/nginx/html:ro
-      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
+      ollama:
+        condition: service_healthy
       model-init:
         condition: service_completed_successfully
     networks:
