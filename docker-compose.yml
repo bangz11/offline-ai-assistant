@@ -1,7 +1,7 @@
 name: offline-ai-assistant
 
 services:
-  # 1) Ollama: runs the models locally
+  # 1. Ollama: runs AI models locally
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -16,7 +16,7 @@ services:
       retries: 20
     restart: unless-stopped
 
-  # 2) One-shot job: downloads both models ONLY if not already stored.
+  # 2. Download models if they are not already installed
   model-init:
     image: ollama/ollama:latest
     container_name: model-init
@@ -24,7 +24,7 @@ services:
       ollama:
         condition: service_healthy
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      OLLAMA_HOST: http://ollama:11434
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -33,12 +33,32 @@ services:
             echo "$$m already present - skipping."
           else
             echo "Downloading $$m ..."
-            ollama pull "$$m"
+            ollama pull "$$m" || exit 1
           fi
         done
     networks:
       - ai-net
     restart: "no"
 
-  # 3) Website (nginx): serves HTML/CSS/JS and proxies /api/ to Ollama
+  # 3. Website: serves the frontend and proxies API requests
   web:
+    image: nginx:alpine
+    container_name: offline-ai-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      model-init:
+        condition: service_completed_successfully
+    networks:
+      - ai-net
+    restart: unless-stopped
+
+networks:
+  ai-net:
+    driver: bridge
+
+volumes:
+  ollama_data:
