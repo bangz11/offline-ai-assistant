@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline AI Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Offline <span>AI Assistant</span></h1>
+        <p class="sub">Model: llama3.2:3b &middot; running locally via Ollama</p>
+      </div>
+      <div class="status" id="status"><i></i><span>Checking…</span></div>
+    </header>
+
+    <section id="chat" class="chat" aria-live="polite">
+      <div class="msg bot"><p>Hello! Ask me anything. Everything runs on this computer, no internet needed.</p></div>
+    </section>
+
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Type your question…  (Enter to send, Shift+Enter for new line)"></textarea>
+      <button id="send">Send</button>
+    </div>
+    <button id="clear" class="link">Clear conversation</button>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

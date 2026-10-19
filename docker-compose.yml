@@ -1,0 +1,89 @@
+name: offline-ai-assistant
+
+services:
+  # 1) Ollama: runs the llama3.2:3b model locally
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_data:/root/.ollama      # models are stored here (persist offline)
+    networks:
+      - ai-net
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    # Optional NVIDIA GPU (uncomment if you have the NVIDIA Container Toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # 2) One-shot job: downloads llama3.2:3b ONLY if it is not already stored.
+  #    Needs internet the first time; skips instantly afterwards (offline OK).
+  model-init:
+    image: ollama/ollama:latest
+    container_name: model-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if ollama list | grep -q "llama3.2:3b"; then
+          echo "Model llama3.2:3b already present - skipping download."
+        else
+          echo "Downloading llama3.2:3b (needs internet, first run only)..."
+          ollama pull llama3.2:3b
+        fi
+    networks:
+      - ai-net
+    restart: "no"
+
+  # 3) Website (nginx) - serves HTML/CSS/JS and proxies /api/ to Ollama
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: ai-web
+    depends_on:
+      ollama:
+        condition: service_healthy
+      model-init:
+        condition: service_completed_successfully
+    ports:
+      - "8080:80"
+    networks:
+      - ai-net
+    restart: unless-stopped
+
+  # 4) Hermes Agent (OPTIONAL, separate terminal agent - NOT used by the website)
+  #    Start with:  docker compose --profile hermes run --rm hermes
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-agent
+    profiles: ["hermes"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    volumes:
+      - hermes_data:/opt/data   # see README if your image version uses another data path
+    networks:
+      - ai-net
+
+networks:
+  ai-net:
+    driver: bridge
+
+volumes:
+  ollama_data:
+  hermes_data:
