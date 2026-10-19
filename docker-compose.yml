@@ -56,9 +56,30 @@ services:
       - ai-net
     restart: unless-stopped
 
+  # 4. Hermes Agent: optional terminal-based AI agent
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    profiles:
+      - hermes
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OPENAI_BASE_URL: http://ollama:11434/v1
+      OPENAI_API_KEY: ollama
+      OPENAI_MODEL: qwen2.5:1.5b
+    volumes:
+      - hermes_data:/opt/data
+    networks:
+      - ai-net
+    stdin_open: true
+    tty: true
+    init: true
+
 networks:
   ai-net:
     driver: bridge
 
 volumes:
   ollama_data:
+  hermes_data:
