@@ -87,3 +87,8 @@ web/
 ```bash
 docker compose down        # keeps the model
 ```
+
+## Hermes Agent: current status and limitation
+Hermes runs in Docker (profile `hermes`), shares the `ai-net` network, and is configured to use Ollama (`http://ollama:11434/v1`, model `llama3.2:3b`). The connection was verified (Hermes reached Ollama's API).
+Hermes requires a context window of at least 64,000 tokens. On a CPU-only laptop this needs about 4 GB of extra RAM, and Ollama's model process was killed (out of memory), so Hermes could not complete a chat there. It should work on a machine with more RAM (set `OLLAMA_CONTEXT_LENGTH=65536` on the ollama service).
+The website does NOT use Hermes. It talks directly to Ollama through nginx.
