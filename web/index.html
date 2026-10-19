@@ -11,7 +11,12 @@
     <header>
       <div>
         <h1>Offline <span>AI Assistant</span></h1>
-        <p class="sub">Model: llama3.2:3b &middot; running locally via Ollama</p>
+        <p class="sub">Running locally via Ollama &middot;
+          <select id="model" aria-label="Choose model">
+            <option value="llama3.2:3b">llama3.2:3b</option>
+            <option value="qwen2.5:1.5b">qwen2.5:1.5b</option>
+          </select>
+        </p>
       </div>
       <div class="status" id="status"><i></i><span>Checking…</span></div>
     </header>

@@ -1,4 +1,5 @@
-const MODEL = "llama3.2:3b";
+const modelSelect = document.getElementById("model");
+const getModel = () => modelSelect.value;
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
@@ -17,13 +18,13 @@ function addMsg(text, cls) {
   return d;
 }
 
-// Check that Ollama is reachable and the model is installed
+// Check that Ollama is reachable and the selected model is installed
 async function checkStatus() {
   const label = statusEl.querySelector("span");
   try {
     const r = await fetch("/api/tags");
     const data = await r.json();
-    const ok = (data.models || []).some(m => m.name === MODEL);
+    const ok = (data.models || []).some(m => m.name === getModel());
     statusEl.className = "status " + (ok ? "ok" : "err");
     label.textContent = ok ? "Ollama connected" : "Model not found";
   } catch {
@@ -48,7 +49,7 @@ async function send() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: MODEL, messages: history, stream: true }),
+      body: JSON.stringify({ model: getModel(), messages: history, stream: true }),
       signal: controller.signal,
     });
     if (!res.ok) throw new Error("Ollama returned HTTP " + res.status + ": " + (await res.text()));
@@ -102,6 +103,7 @@ document.getElementById("clear").addEventListener("click", () => {
   chat.innerHTML = "";
   addMsg("Conversation cleared. Ask me anything!", "bot");
 });
+modelSelect.addEventListener("change", checkStatus);
 
 checkStatus();
 setInterval(checkStatus, 15000);

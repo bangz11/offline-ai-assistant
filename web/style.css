@@ -31,3 +31,5 @@ button{cursor:pointer;border:0;border-radius:12px;padding:0 24px;font-weight:700
 button:hover{filter:brightness(1.08)} button:disabled{opacity:.5;cursor:not-allowed}
 button.stop{background:#e5484d;color:#fff}
 .link{background:none;color:var(--gold-light);font-size:.8rem;font-weight:400;align-self:center;padding:2px;text-decoration:underline}
+select{background:rgba(0,0,0,.35);color:var(--gold-light);border:1px solid rgba(212,175,55,.5);border-radius:8px;padding:3px 8px;font:inherit}
+select{background:rgba(0,0,0,.35);color:var(--gold-light);border:1px solid rgba(212,175,55,.5);border-radius:8px;padding:3px 8px;font:inherit}

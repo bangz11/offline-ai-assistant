@@ -1,12 +1,12 @@
 name: offline-ai-assistant
 
 services:
-  # 1) Ollama: runs the llama3.2:3b model locally
+  # 1) Ollama: runs the models locally
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     volumes:
-      - ollama_data:/root/.ollama      # models are stored here (persist offline)
+      - ollama_data:/root/.ollama
     networks:
       - ai-net
     healthcheck:
@@ -15,16 +15,8 @@ services:
       timeout: 5s
       retries: 20
     restart: unless-stopped
-    # Optional NVIDIA GPU (uncomment if you have the NVIDIA Container Toolkit):
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
 
-  # 2) One-shot job: downloads llama3.2:3b ONLY if it is not already stored.
+  # 2) One-shot job: downloads both models ONLY if not already stored.
   #    Needs internet the first time; skips instantly afterwards (offline OK).
   model-init:
     image: ollama/ollama:latest
@@ -37,17 +29,19 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        if ollama list | grep -q "llama3.2:3b"; then
-          echo "Model llama3.2:3b already present - skipping download."
-        else
-          echo "Downloading llama3.2:3b (needs internet, first run only)..."
-          ollama pull llama3.2:3b
-        fi
+        for m in llama3.2:3b qwen2.5:1.5b; do
+          if ollama list | grep -q "$$m"; then
+            echo "$$m already present - skipping."
+          else
+            echo "Downloading $$m ..."
+            ollama pull "$$m"
+          fi
+        done
     networks:
       - ai-net
     restart: "no"
 
-  # 3) Website (nginx) - serves HTML/CSS/JS and proxies /api/ to Ollama
+  # 3) Website (nginx): serves HTML/CSS/JS and proxies /api/ to Ollama
   web:
     build:
       context: ./web
@@ -64,8 +58,7 @@ services:
       - ai-net
     restart: unless-stopped
 
-  # 4) Hermes Agent (OPTIONAL, separate terminal agent - NOT used by the website)
-  #    Start with:  docker compose --profile hermes run --rm hermes
+  # 4) Hermes Agent (OPTIONAL, separate terminal agent, not used by the website)
   hermes:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-agent
@@ -76,7 +69,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - hermes_data:/opt/data   # see README if your image version uses another data path
+      - hermes_data:/opt/data
     networks:
       - ai-net
 
