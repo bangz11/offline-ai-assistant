@@ -5,6 +5,8 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
+    environment:
+      OLLAMA_MAX_LOADED_MODELS: 1
     volumes:
       - ollama_data:/root/.ollama
     networks:
