@@ -1,12 +1,11 @@
 name: offline-ai-assistant
 
 services:
-  # 1. Ollama: runs AI models locally
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     environment:
-      OLLAMA_MAX_LOADED_MODELS: 1
+      OLLAMA_MAX_LOADED_MODELS: "1"
     volumes:
       - ollama_data:/root/.ollama
     networks:
@@ -18,7 +17,6 @@ services:
       retries: 20
     restart: unless-stopped
 
-  # 2. Download models if they are not already installed
   model-init:
     image: ollama/ollama:latest
     container_name: model-init
@@ -42,7 +40,6 @@ services:
       - ai-net
     restart: "no"
 
-  # 3. Website: built from web/Dockerfile (nginx), proxies /api/ to Ollama
   web:
     build:
       context: ./web
@@ -59,18 +56,12 @@ services:
       - ai-net
     restart: unless-stopped
 
-  # 4. Hermes Agent: optional terminal-based AI agent
   hermes:
     image: nousresearch/hermes-agent:latest
-    profiles:
-      - hermes
+    container_name: hermes-agent
     depends_on:
       ollama:
         condition: service_healthy
-    environment:
-      OPENAI_BASE_URL: http://ollama:11434/v1
-      OPENAI_API_KEY: ollama
-      OPENAI_MODEL: qwen2.5:1.5b
     volumes:
       - hermes_data:/opt/data
     networks:
@@ -78,6 +69,7 @@ services:
     stdin_open: true
     tty: true
     init: true
+    restart: on-failure:3
 
 networks:
   ai-net:
